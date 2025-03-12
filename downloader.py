@@ -10,7 +10,7 @@ def download_video(url, audio_only=False):
     """Mengunduh video atau audio dari YouTube, TikTok, dan Facebook"""
     ydl_opts = {
         'format': 'bestaudio/best' if audio_only else 'best',
-        'outtmpl': os.path.join(SAVE_PATH, '%(title)s.%(ext)s'),
+        'outtmpl': os.path.join(SAVE_PATH, '%(id)s.%(ext)s'),
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
