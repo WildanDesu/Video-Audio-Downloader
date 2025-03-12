@@ -32,7 +32,7 @@ def download_instagram(url):
     except Exception as e:
         print(f"❌ Error saat mengunduh: {e}")
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     print("=== Universal Video & Audio Downloader ===")
 
     # Meminta input URL
