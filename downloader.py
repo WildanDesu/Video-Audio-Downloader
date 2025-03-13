@@ -3,14 +3,21 @@ import yt_dlp
 import instaloader
 
 # Lokasi penyimpanan video/audio
-SAVE_PATH = "/storage/emulated/0/Download/"  
+SAVE_PATH = "/storage/emulated/0/Download/"
 os.makedirs(SAVE_PATH, exist_ok=True)
 
-def download_video(url, audio_only=False):
+def download_video(url, audio_only=False, custom_filename=None):
     """Mengunduh video atau audio dari YouTube, TikTok, dan Facebook"""
+
+    # Menentukan format penyimpanan
+    if custom_filename:
+        output_filename = os.path.join(SAVE_PATH, f"{custom_filename}.%(ext)s")
+    else:
+        output_filename = os.path.join(SAVE_PATH, "%(id)s.%(ext)s")
+
     ydl_opts = {
         'format': 'bestaudio/best' if audio_only else 'best',
-        'outtmpl': os.path.join(SAVE_PATH, '%(id)s.%(ext)s'),
+        'outtmpl': output_filename,
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
@@ -21,36 +28,37 @@ def download_video(url, audio_only=False):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
-def download_instagram(url):
+def download_instagram(url, custom_filename=None):
     """Mengunduh video dari Instagram"""
+    
     loader = instaloader.Instaloader(dirname_pattern=SAVE_PATH)
     post_shortcode = url.split("/")[-2]
 
     try:
         loader.download_post(instaloader.Post.from_shortcode(loader.context, post_shortcode), target="Instagram")
-        print("✅ Unduhan Instagram berhasil!")
+        print("✅ Unduhan selesai!")
     except Exception as e:
-        print(f"❌ Error saat mengunduh: {e}")
+        print(f"❌ Gagal mengunduh: {e}")
 
-if __name__ == "__main__":
-    print("=== Universal Video & Audio Downloader ===")
+if _name_ == "_main_":
+    print("\n===== Universal Video & Audio Downloader =====\n")
 
-    # Meminta input URL
-    video_url = input("Masukkan URL video: ").strip()
+    # Memasukkan URL
+    url = input("Masukkan URL video: ").strip()
 
-    if not video_url:
-        print("❌ URL tidak boleh kosong!")
-        exit()
+    # Menampilkan opsi format unduhan secara vertikal dengan keterangan tambahan
+    print("\nPilih format unduhan:")
+    print("1. Video (Default)")
+    print("2. Audio (MP3)")
+    print("   Kosongkan dan tekan Enter untuk memilih opsi 1 (Video)")
 
-    # Menentukan pilihan unduhan
-    print("\n1. Download Video (Default)")
-    print("2. Download Audio (MP3)")
-    choice = input("Pilih mode (tekan Enter untuk Video): ").strip()
+    # Memilih format (default: Video)
+    pilihan = input("Masukkan pilihan (1/2): ").strip()
+    audio_only = True if pilihan == "2" else False
 
-    # Proses unduhan berdasarkan pilihan
-    if "instagram.com" in video_url:
-        download_instagram(video_url)
-    elif choice == "2":
-        download_video(video_url, audio_only=True)
-    else:
-        download_video(video_url)
+    # Memasukkan nama file (default: ID)
+    custom_filename = input("Masukkan nama file (kosongkan untuk default): ").strip()
+    custom_filename = custom_filename if custom_filename else None
+
+    # Menjalankan proses unduhan
+    download_video(url, audio_only=audio_only, custom_filename=custom_filename)
