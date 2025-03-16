@@ -13,11 +13,11 @@ def clear_screen():
     os.system("clear")
 
 def banner():
-    print("=====================")
+    print("==========================")
     print("     UNIVERSAL TOOLS")
-    print("         VERSI 1.3")
+    print("        VERSI 1.3")
     print("    Made By WildanDesu")
-    print("=====================\n")
+    print("==========================\n")
 
 def progress_bar(duration):
     for _ in tqdm(range(duration), desc="Proses...", unit="s"):
