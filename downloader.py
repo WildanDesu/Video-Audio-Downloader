@@ -1,8 +1,5 @@
 import os
-import sys
 import subprocess
-import yt_dlp
-import instaloader
 
 # Fungsi untuk mengecek apakah sebuah perintah tersedia
 def is_installed(command):
@@ -22,6 +19,10 @@ if missing:
     print(f"Dependensi berikut belum terinstal: {', '.join(missing)}")
     print("Menjalankan set_up.py untuk menginstal dependensi...\n")
     os.system("python set_up.py")
+
+import sys
+import yt_dlp
+import instaloader
 
 # Path penyimpanan
 DOWNLOAD_PATH = "/sdcard/Download"
