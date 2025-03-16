@@ -1,64 +1,158 @@
 import os
+import sys
+import subprocess
 import yt_dlp
 import instaloader
+import time
+from tqdm import tqdm
 
-# Lokasi penyimpanan video/audio
-SAVE_PATH = "/storage/emulated/0/Download/"
-os.makedirs(SAVE_PATH, exist_ok=True)
+# Path penyimpanan
+DOWNLOAD_PATH = "/sdcard/Download"
 
-def download_video(url, audio_only=False, custom_filename=None):
-    """Mengunduh video atau audio dari YouTube, TikTok, dan Facebook"""
+def clear_screen():
+    os.system("clear")
 
-    # Menentukan format penyimpanan
-    if custom_filename:
-        output_filename = os.path.join(SAVE_PATH, f"{custom_filename}.%(ext)s")
-    else:
-        output_filename = os.path.join(SAVE_PATH, "%(id)s.%(ext)s")
+def banner():
+    print("=====================")
+    print("     UNIVERSAL TOOLS")
+    print("         VERSI 1.3")
+    print("    Made By WildanDesu")
+    print("=====================\n")
 
+def progress_bar(duration):
+    for _ in tqdm(range(duration), desc="Proses...", unit="s"):
+        time.sleep(1)
+
+def menu():
+    while True:
+        clear_screen()
+        banner()
+        print("Menu:")
+        print("1. Video/Audio Downloader")
+        print("2. Ubah Video ke Audio")
+        print("3. Keluar\n")
+        pilihan = input("Pilih Opsi (1/2/3): ").strip()
+
+        if pilihan == "1":
+            video_audio_downloader()
+        elif pilihan == "2":
+            convert_video_to_audio()
+        elif pilihan == "3":
+            sys.exit()
+        else:
+            input("Pilihan tidak valid! Tekan Enter untuk kembali...")
+
+def video_audio_downloader():
+    clear_screen()
+    banner()
+    url = input("Masukkan URL: ").strip()
+    if not url:
+        input("URL tidak boleh kosong! Tekan Enter untuk kembali...")
+        return
+
+    print("\nPilih Format Download:")
+    print("1. Video (Mp4) (Default)")
+    print("2. Audio (Mp3)")
+    format_choice = input("Pilih Opsi (1/2) [Kosongkan dan Enter Untuk Default]: ").strip() or "1"
+
+    if format_choice == "1":
+        print("\nPilih Resolusi Video:")
+        print("1. 1080p")
+        print("2. 720p")
+        print("3. 480p")
+        print("4. Best (Default)")
+        res_choice = input("Pilih Opsi (1/2/3/4) [Kosongkan dan Enter Untuk Default]: ").strip() or "4"
+
+        resolutions = {"1": "1080", "2": "720", "3": "480", "4": "best"}
+        resolution = resolutions.get(res_choice, "best")
+
+        filename = input("\nGanti Nama Video (Kosongkan dan Enter Untuk Default): ").strip()
+        download_video(url, resolution, filename)
+
+    elif format_choice == "2":
+        filename = input("\nGanti Nama Audio (Kosongkan dan Enter Untuk Default): ").strip()
+        download_audio(url, filename)
+    
+    input("\nTekan Enter untuk kembali ke menu...")
+
+def download_video(url, resolution, filename):
     ydl_opts = {
-        'format': 'bestaudio/best' if audio_only else 'best',
-        'outtmpl': output_filename,
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }] if audio_only else []
+        'format': f'bestvideo[height<={resolution}]+bestaudio/best',
+        'outtmpl': f"{DOWNLOAD_PATH}/%(id)s.%(ext)s" if not filename else f"{DOWNLOAD_PATH}/{filename}.%(ext)s",
+        'noplaylist': True,
+        'merge_output_format': 'mp4'
     }
 
+    print("\nSedang mengunduh video...")
+    progress_bar(5)  # Simulasi progress bar selama 5 detik
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+        try:
+            ydl.download([url])
+            print("\nDownload berhasil!")
+        except Exception as e:
+            print(f"\nDownload gagal: {e}")
+            if "instagram.com" in url:
+                print("\nCoba menggunakan instaloader...")
+                download_instagram(url, filename)
 
-def download_instagram(url, custom_filename=None):
-    """Mengunduh video dari Instagram"""
-    
-    loader = instaloader.Instaloader(dirname_pattern=SAVE_PATH)
-    post_shortcode = url.split("/")[-2]
+def download_audio(url, filename):
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': f"{DOWNLOAD_PATH}/%(id)s.%(ext)s" if not filename else f"{DOWNLOAD_PATH}/{filename}.%(ext)s",
+        'noplaylist': True,
+        'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}]
+    }
 
+    print("\nSedang mengunduh audio...")
+    progress_bar(5)  # Simulasi progress bar selama 5 detik
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        try:
+            ydl.download([url])
+            print("\nDownload berhasil!")
+        except Exception as e:
+            print(f"\nDownload gagal: {e}")
+            if "instagram.com" in url:
+                print("\nCoba menggunakan instaloader...")
+                download_instagram(url, filename)
+
+def download_instagram(url, filename):
+    loader = instaloader.Instaloader(download_videos=True, download_pictures=False)
     try:
-        loader.download_post(instaloader.Post.from_shortcode(loader.context, post_shortcode), target="Instagram")
-        print("✅ Unduhan selesai!")
+        print("\nMengunduh dari Instagram...")
+        progress_bar(5)  # Simulasi progress bar selama 5 detik
+        loader.download_profile(url.split("/")[-2], profile_pic=False)
+        print("\nDownload Instagram berhasil!")
     except Exception as e:
-        print(f"❌ Gagal mengunduh: {e}")
+        print(f"\nGagal mengunduh dari Instagram: {e}")
+
+def convert_video_to_audio():
+    clear_screen()
+    banner()
+    video_path = input("Silahkan masukkan path lokasi video yang ingin diubah: ").strip()
+    if not os.path.exists(video_path):
+        input("\nFile tidak ditemukan! Tekan Enter untuk kembali...")
+        return
+
+    filename = input("\nGanti Nama Audio (Kosongkan dan Enter Untuk Default): ").strip()
+    if not filename:
+        filename = os.path.splitext(os.path.basename(video_path))[0]
+
+    audio_path = os.path.join(os.path.dirname(video_path), f"{filename}.mp3")
+
+    print("\nMengonversi video ke audio...")
+    progress_bar(5)  # Simulasi progress bar selama 5 detik
+
+    command = f'ffmpeg -i "{video_path}" -q:a 0 -map a "{audio_path}" -y'
+    process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    if process.returncode == 0:
+        print("\nKonversi berhasil!")
+    else:
+        print("\nKonversi gagal!")
+
+    input("\nTekan Enter untuk kembali ke menu...")
 
 if __name__ == "__main__":
-    print("\n===== Universal Video & Audio Downloader =====\n")
-
-    # Memasukkan URL
-    url = input("Masukkan URL video: ").strip()
-
-    # Menampilkan opsi format unduhan secara vertikal dengan keterangan tambahan
-    print("\nPilih format unduhan:")
-    print("1. Video (Default)")
-    print("2. Audio (MP3)")
-    print("   Kosongkan dan tekan Enter untuk memilih opsi 1 (Video)")
-
-    # Memilih format (default: Video)
-    pilihan = input("Masukkan pilihan (1/2): ").strip()
-    audio_only = True if pilihan == "2" else False
-
-    # Memasukkan nama file (default: ID)
-    custom_filename = input("Masukkan nama file (kosongkan untuk default): ").strip()
-    custom_filename = custom_filename if custom_filename else None
-
-    # Menjalankan proses unduhan
-    download_video(url, audio_only=audio_only, custom_filename=custom_filename)
+    menu()
