@@ -4,6 +4,25 @@ import subprocess
 import yt_dlp
 import instaloader
 
+# Fungsi untuk mengecek apakah sebuah perintah tersedia
+def is_installed(command):
+    return subprocess.call(f"command -v {command} > /dev/null 2>&1", shell=True) == 0
+
+# Mengecek apakah dependensi terinstal
+dependencies = {
+    "yt-dlp": "yt-dlp",
+    "ffmpeg": "ffmpeg",
+    "instaloader": "instaloader"
+}
+
+missing = [pkg for pkg, cmd in dependencies.items() if not is_installed(cmd)]
+
+# Jika ada yang belum terinstal, jalankan set_up.py
+if missing:
+    print(f"Dependensi berikut belum terinstal: {', '.join(missing)}")
+    print("Menjalankan set_up.py untuk menginstal dependensi...\n")
+    os.system("python set_up.py")
+
 # Path penyimpanan
 DOWNLOAD_PATH = "/sdcard/Download"
 
